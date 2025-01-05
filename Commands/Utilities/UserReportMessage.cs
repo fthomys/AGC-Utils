@@ -82,6 +82,7 @@ public class UserReportMessage : ApplicationCommandsModule
         var teamChannel = guild.GetChannel(teamChannelId);
 
         var messagecontent = message.Content;
+        var reporter = ctx.User;
 
         if (string.IsNullOrWhiteSpace(messagecontent))
             messagecontent = "Kein Textinhalt. Möglicherweise ein Bild oder Sticker oder ähnliches.";
@@ -91,7 +92,7 @@ public class UserReportMessage : ApplicationCommandsModule
         var embed = new DiscordEmbedBuilder()
             .WithTitle("Nachricht gemeldet")
             .WithDescription(
-                $"**Gemeldete Nachricht:**```{messagecontent}```\n**Gemeldet von:**\n{ctx.User.Mention} / {ctx.User.Id}\n\n**Zusätzliche Infos:**\n```{result.Result.Interaction.Data.Components[0].Value}```")
+                $"**Gemeldeter User: {reporter.Mention} ({reporter.UsernameWithDiscriminator}) **```{reporter.Id}```\n**Gemeldete Nachricht:**```{messagecontent}```\n**Gemeldet von:**\n{ctx.User.Mention} / {ctx.User.Id}\n\n**Zusätzliche Infos:**\n```{result.Result.Interaction.Data.Components[0].Value}```")
             .WithColor(DiscordColor.Red)
             .WithFooter($"Gemeldet in #{channel.Name}")
             .Build();
@@ -109,6 +110,6 @@ public class UserReportMessage : ApplicationCommandsModule
         await Task.Delay(500);
 
         await teamChannel.SendMessageAsync(
-            $"**Neuer Report** \n{ctx.User.Mention} / {ctx.User.Id} hat eine Nachricht von {message.Author.Mention} / {message.Author.Id} gemeldet. {m.JumpLink}");
+            $"**@here Neuer Report** \n{ctx.User.Mention} / {ctx.User.Id} hat eine Nachricht von {message.Author.Mention} / {message.Author.Id} gemeldet. {m.JumpLink}");
     }
 }
