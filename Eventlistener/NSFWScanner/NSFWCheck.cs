@@ -27,6 +27,8 @@ public class NSFWCheck : BaseCommandModule
 
             if (args.Author.Id == 515404778021322773 || args.Author.Id == 856780995629154305) return;
 
+            if (args.Channel.Id != 750365462524854331 || args.Channel.Id != 771174633230827540) return;
+
             using var _httpClient = new HttpClient();
             var apikey = BotConfig.GetConfig()["YukiMod"]["API-KEY"];
             _httpClient.DefaultRequestHeaders.Add("x-api-key", apikey);
