@@ -1,8 +1,10 @@
-﻿#region
+#region
 
 using System.Text.RegularExpressions;
 using AGC_Management.Attributes;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System.Text;
 
 #endregion
 
@@ -20,21 +22,20 @@ public class NSFWCheck : BaseCommandModule
 
             if (args.Guild.Id != ulong.Parse(BotConfig.GetConfig()["ServerConfig"]["ServerId"])) return;
 
-            var isActivated = bool.Parse(BotConfig.GetConfig()["LinkLens"]["Active"]);
+            var isActivated = bool.Parse(BotConfig.GetConfig()["YukiMod"]["Active"]);
             if (!isActivated) return;
 
             if (args.Author.Id == 515404778021322773 || args.Author.Id == 856780995629154305) return;
 
             using var _httpClient = new HttpClient();
-            var apikey = BotConfig.GetConfig()["LinkLens"]["API-KEY"];
-            _httpClient.DefaultRequestHeaders.Add("api-key", apikey);
+            var apikey = BotConfig.GetConfig()["YukiMod"]["API-KEY"];
+            _httpClient.DefaultRequestHeaders.Add("x-api-key", apikey);
             _httpClient.DefaultRequestHeaders.Add("User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.1000.0 Safari/537.36");
 
             var attachments = args.Message.Attachments;
             var urls = attachments.Select(att => att.Url).ToList();
 
-            // Extract URLs from message if no attachments
             if (!attachments.Any())
             {
                 var text = args.Message.Content;
@@ -54,15 +55,20 @@ public class NSFWCheck : BaseCommandModule
 
             foreach (var url in urls)
             {
-                var content = new StringContent($"{{\"imageUrl\":\"{url}\"}}", null, "application/json");
-                var response = await _httpClient.PostAsync("https://api.linklens.xyz/analyze", content);
+                var content = new StringContent(JsonConvert.SerializeObject(new
+                {
+                    imageUrl = url,
+                    userId = args.Author.Id.ToString()
+                }), Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync("https://api.yukimod.com/scan/image", content);
                 var responseString = await response.Content.ReadAsStringAsync();
                 var json = JObject.Parse(responseString);
-                var isNSFW = bool.Parse(json["is_nsfw"].ToString());
+                var isNSFW = bool.Parse(json["detectionResult"]["nsfw"].ToString());
 
                 if (isNSFW)
                 {
-                    var AlertChannel = ulong.Parse(BotConfig.GetConfig()["LinkLens"]["AlertChannel"]);
+                    var AlertChannel = ulong.Parse(BotConfig.GetConfig()["YukiMod"]["AlertChannel"]);
                     var c = args.Guild.GetChannel(AlertChannel);
                     var e = GetReportMessage(args.Message, args.Author);
                     await c.SendMessageAsync(e);
@@ -78,15 +84,15 @@ public class NSFWCheck : BaseCommandModule
     {
         _ = Task.Run(async () =>
         {
-            var isActivated = bool.Parse(BotConfig.GetConfig()["LinkLens"]["Active"]);
+            var isActivated = bool.Parse(BotConfig.GetConfig()["YukiMod"]["Active"]);
             if (!isActivated) return;
 
             if (args.Guild.Id != ulong.Parse(BotConfig.GetConfig()["ServerConfig"]["ServerId"])) return;
 
 
             using var _httpClient = new HttpClient();
-            var apikey = BotConfig.GetConfig()["LinkLens"]["API-KEY"];
-            _httpClient.DefaultRequestHeaders.Add("api-key", apikey);
+            var apikey = BotConfig.GetConfig()["YukiMod"]["API-KEY"];
+            _httpClient.DefaultRequestHeaders.Add("x-api-key", apikey);
             _httpClient.DefaultRequestHeaders.Add("User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.1000.0 Safari/537.36");
 
@@ -95,15 +101,20 @@ public class NSFWCheck : BaseCommandModule
                 !avatarUrl.Contains(".webp"))
                 return;
 
-            var content = new StringContent($"{{\"imageUrl\":\"{args.Member.AvatarUrl}\"}}", null, "application/json");
-            var response = await _httpClient.PostAsync("https://api.linklens.xyz/analyze", content);
+            var content = new StringContent(JsonConvert.SerializeObject(new
+            {
+                imageUrl = args.Member.AvatarUrl,
+                userId = args.Member.Id.ToString()
+            }), Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("https://api.yukimod.com/scan/image", content);
             var responseString = await response.Content.ReadAsStringAsync();
             var json = JObject.Parse(responseString);
-            var isNSFW = bool.Parse(json["is_nsfw"].ToString());
+            var isNSFW = bool.Parse(json["detectionResult"]["nsfw"].ToString());
 
             if (isNSFW)
             {
-                var AlertChannel = ulong.Parse(BotConfig.GetConfig()["LinkLens"]["AlertChannel"]);
+                var AlertChannel = ulong.Parse(BotConfig.GetConfig()["YukiMod"]["AlertChannel"]);
                 var c = args.Guild.GetChannel(AlertChannel);
                 var e = GetReportAvatarOnJoin(args.Member);
                 await c.SendMessageAsync(e);
@@ -112,31 +123,36 @@ public class NSFWCheck : BaseCommandModule
     }
 
 
-    //[Event]
+    [Event]
     public async Task GuildMemberUpdated(DiscordClient _client, GuildMemberUpdateEventArgs _args)
     {
         _ = Task.Run(async () =>
         {
-            var isActivated = bool.Parse(BotConfig.GetConfig()["LinkLens"]["Active"]);
+            var isActivated = bool.Parse(BotConfig.GetConfig()["YukiMod"]["Active"]);
             if (!isActivated) return;
 
 
             if (_args.Guild.Id != GlobalProperties.AGCGuild.Id) return;
 
             using var _httpClient = new HttpClient();
-            var apikey = BotConfig.GetConfig()["LinkLens"]["API-KEY"];
-            _httpClient.DefaultRequestHeaders.Add("api-key", apikey);
+            var apikey = BotConfig.GetConfig()["YukiMod"]["API-KEY"];
+            _httpClient.DefaultRequestHeaders.Add("x-api-key", apikey);
             _httpClient.DefaultRequestHeaders.Add("User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.1000.0 Safari/537.36");
 
-            var content = new StringContent($"{{\"imageUrl\":\"{_args.AvatarUrlAfter}\"}}", null, "application/json");
-            var response = await _httpClient.PostAsync("https://api.linklens.xyz/analyze", content);
+            var content = new StringContent(JsonConvert.SerializeObject(new
+            {
+                imageUrl = _args.AvatarUrlAfter,
+                userId = _args.Member.Id.ToString()
+            }), Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("https://api.yukimod.com/scan/image", content);
             var responseString = await response.Content.ReadAsStringAsync();
             var json = JObject.Parse(responseString);
-            var isNSFW = bool.Parse(json["is_nsfw"].ToString());
+            var isNSFW = bool.Parse(json["detectionResult"]["nsfw"].ToString());
             if (isNSFW)
             {
-                var AlertChannel = ulong.Parse(BotConfig.GetConfig()["LinkLens"]["AlertChannel"]);
+                var AlertChannel = ulong.Parse(BotConfig.GetConfig()["YukiMod"]["AlertChannel"]);
                 var c = GlobalProperties.AGCGuild.GetChannel(AlertChannel);
                 var e = GetReportAvatarOnMemberUpdate(_args.Member);
                 await c.SendMessageAsync(e);
@@ -149,7 +165,7 @@ public class NSFWCheck : BaseCommandModule
     [RequireStaffRole]
     public async Task NSFWCheckCommand(CommandContext ctx, bool activate)
     {
-        BotConfig.SetConfig("LinkLens", "Active", activate.ToString());
+        BotConfig.SetConfig("YukiMod", "Active", activate.ToString());
         await ctx.RespondAsync($"NSFW Check wurde auf ``{activate}`` gesetzt!");
     }
 
@@ -168,7 +184,7 @@ public class NSFWCheck : BaseCommandModule
 
         var mb = new DiscordMessageBuilder()
             .WithEmbed(embed)
-            .WithContent($"NSFW Inhalt von {user.Mention} wurde gemeldet! **(Avatar)**");
+            .WithContent($"NSFW Inhalt von {user.Mention} wurde erkannt! **(Avatar)**");
         return mb;
     }
 
@@ -186,7 +202,7 @@ public class NSFWCheck : BaseCommandModule
 
         var mb = new DiscordMessageBuilder()
             .WithEmbed(embed)
-            .WithContent($"NSFW Inhalt von {user.Mention} wurde gemeldet! **(Avatar)**");
+            .WithContent($"NSFW Inhalt von {user.Mention} wurde erkannt! **(Avatar)**");
         return mb;
     }
 
@@ -194,7 +210,7 @@ public class NSFWCheck : BaseCommandModule
     private static DiscordMessageBuilder GetReportMessage(DiscordMessage message, DiscordUser user)
     {
         var embed = new DiscordEmbedBuilder()
-            .WithAuthor("NSFW Inhalt erkannt!")
+            .WithAuthor("Beleidigendes Verhalten erkannt!")
             .WithColor(DiscordColor.Red)
             .WithTimestamp(message.CreationTimestamp)
             .WithFooter("Reported at")
@@ -204,7 +220,7 @@ public class NSFWCheck : BaseCommandModule
             .AddField(new DiscordEmbedField("Message Link",
                 $"https://discord.com/channels/{message.Guild.Id}/{message.Channel.Id}/{message.Id}"))
             .AddField(new DiscordEmbedField("Message Content",
-                $"```{(string.IsNullOrWhiteSpace(message.Content) ? "none" : message.Content)}```"));
+                $"\`\`\`{(string.IsNullOrWhiteSpace(message.Content) ? "none" : message.Content)}\`\`\`"));
 
 
         var button = new DiscordLinkButtonComponent(
@@ -212,7 +228,7 @@ public class NSFWCheck : BaseCommandModule
         var mb = new DiscordMessageBuilder()
             .WithEmbed(embed)
             .WithReply(message.Id)
-            .WithContent($"NSFW Inhalt von {user.Mention} wurde gemeldet! **(Nachricht)**")
+            .WithContent($"NSFW Inhalt von {user.Mention} wurde erkannt! **(Nachricht)**")
             .AddComponents(button);
         return mb;
     }
