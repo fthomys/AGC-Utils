@@ -220,7 +220,7 @@ public class NSFWCheck : BaseCommandModule
             .AddField(new DiscordEmbedField("Message Link",
                 $"https://discord.com/channels/{message.Guild.Id}/{message.Channel.Id}/{message.Id}"))
             .AddField(new DiscordEmbedField("Message Content",
-                $"\`\`\`{(string.IsNullOrWhiteSpace(message.Content) ? "none" : message.Content)}\`\`\`"));
+                $"```{(string.IsNullOrWhiteSpace(message.Content) ? "none" : message.Content)}```"));
 
 
         var button = new DiscordLinkButtonComponent(
