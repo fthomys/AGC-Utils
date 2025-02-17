@@ -41,6 +41,21 @@ public static class ModerationHelper
         return (WarnsToKickEnabled, WarnsToBanEnabled);
     }
 
+    public static async Task KickFlag(DiscordUser user, string reason, DiscordUser mod)
+    {
+        var prefix = "KICK-";
+        var caseid = prefix + ToolSet.GenerateCaseID();
+        Dictionary<string, object> data = new()
+        {
+            { "userid", (long)user.Id },
+            { "punisherid", (long)mod.Id },
+            { "datum", DateTimeOffset.Now.ToUnixTimeSeconds() },
+            { "description", reason },
+            { "caseid", caseid }
+        };
+        await DatabaseService.InsertDataIntoTable("flags", data);
+    }
+
     public static async Task<(int, int)> GetWarnKickValues()
     {
         int WarnsToKick;

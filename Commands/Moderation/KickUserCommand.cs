@@ -141,6 +141,8 @@ public sealed class KickUserCommand : BaseCommandModule
                 ec = DiscordColor.Green;
             }
 
+            await ModerationHelper.KickFlag(user, reason, ctx.User);
+
             var discordEmbedBuilder = new DiscordEmbedBuilder()
                 .WithTitle("Kick abgeschlossen")
                 .WithDescription(e_string)
