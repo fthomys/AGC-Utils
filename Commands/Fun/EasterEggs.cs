@@ -13,7 +13,7 @@ public class AGCEasterEggs : BaseCommandModule
     public async Task Savas(CommandContext ctx)
     {
         await ctx.Channel.SendMessageAsync("POV <@443114493992763392>:");
-        await ctx.channel.SendMessageAsync("# Ich liebe Tomaten");
+        await ctx.Channel.SendMessageAsync("# Ich liebe Tomaten");
         await ctx.Channel.SendMessageAsync(
             "https://i.imgur.com/BTAcv4B.gif");
     }
