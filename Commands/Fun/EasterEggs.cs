@@ -9,7 +9,7 @@ namespace AGC_Management.Commands.Fun;
 public class AGCEasterEggs : BaseCommandModule
 {
     [AGCEasterEggsEnabled]
-    [Command("koni")]
+    [Command("savas")]
     public async Task Koni(CommandContext ctx)
     {
         await ctx.Channel.SendMessageAsync("POV <@443114493992763392>:");
