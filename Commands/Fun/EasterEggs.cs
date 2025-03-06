@@ -10,7 +10,7 @@ public class AGCEasterEggs : BaseCommandModule
 {
     [AGCEasterEggsEnabled]
     [Command("savas")]
-    public async Task Koni(CommandContext ctx)
+    public async Task Savas(CommandContext ctx)
     {
         await ctx.Channel.SendMessageAsync("POV <@443114493992763392>:");
         await ctx.channel.SendMessageAsync("# Ich liebe Tomaten")
