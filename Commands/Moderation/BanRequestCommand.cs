@@ -91,7 +91,6 @@ public sealed class BanRequestCommand : BaseCommandModule
                 if (!GlobalProperties.DebugMode)
                     staffMentionString = string.Join(" ", onlineStaffWithBanPerms
                         .Where(member => member.Id != 441192596325531648)
-                        .Where(member => member.Id != 515404778021322773)
                         .Select(member => member.Mention));
                 else
                     staffMentionString = "DEBUG MODE AKTIV | Kein Ping wird ausgeführt";
